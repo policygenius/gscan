@@ -170,7 +170,7 @@ describe('Read theme', function () {
             theme.files.should.be.an.Array().with.lengthOf(7);
 
             var fileNames = _.map(theme.files, function (file) {
-                return _.pick(file, function(value, key) {
+                return _.pickBy(file, function(value, key) {
                     return key === 'file' || key === 'ext';
                 });
             });
@@ -182,6 +182,45 @@ describe('Read theme', function () {
             fileNames.should.containEql({ file: 'partials/subfolder/test.hbs', ext: '.hbs'});
             fileNames.should.containEql({ file: 'post.hbs', ext: '.hbs'});
             fileNames.should.containEql({ file: 'logo.new.hbs', ext: '.hbs' });
+
+            done();
+        });
+    });
+
+    it('Can extract custom templates', function (done) {
+        readTheme(themePath('theme-with-custom-templates')).then(function (theme) {
+            theme.should.be.a.ValidThemeObject();
+
+            theme.files.should.be.an.Array().with.lengthOf(8);
+            theme.partials.length.should.eql(0);
+            theme.templates.all.length.should.eql(6);
+            theme.templates.custom.length.should.eql(4);
+
+            // ensure we don't change the structure of theme.files
+            theme.files[0].file.should.eql('custom-My-Post.hbs');
+            theme.files[0].ext.should.eql('.hbs');
+            theme.files[0].content.should.eql('content');
+            should.exist(theme.files[0].compiled);
+
+            theme.templates.custom[0].filename.should.eql('custom-My-Post');
+            theme.templates.custom[0].name.should.eql('My Post');
+            theme.templates.custom[0].for.should.eql(['page', 'post']);
+            should.not.exist(theme.templates.custom[0].slug);
+
+            theme.templates.custom[1].filename.should.eql('custom-about');
+            theme.templates.custom[1].name.should.eql('About');
+            theme.templates.custom[1].for.should.eql(['page', 'post']);
+            should.not.exist(theme.templates.custom[1].slug);
+
+            theme.templates.custom[2].filename.should.eql('page-1');
+            theme.templates.custom[2].name.should.eql('1');
+            theme.templates.custom[2].for.should.eql(['page']);
+            theme.templates.custom[2].slug.should.eql('1');
+
+            theme.templates.custom[3].filename.should.eql('post-welcome-ghost');
+            theme.templates.custom[3].name.should.eql('Welcome Ghost');
+            theme.templates.custom[3].for.should.eql(['post']);
+            theme.templates.custom[3].slug.should.eql('welcome-ghost');
 
             done();
         });
